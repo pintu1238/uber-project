@@ -1,15 +1,36 @@
-const dotenv= require('dotenv');
-dotenv.config();
-const express= require('express');
+import express from "express";
+import { config } from "dotenv";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import fileUpload from "express-fileupload";
+import { createTables } from "./utils/createTable.js";
+import { errorMiddleware } from "./middlewares/errorMiddleware.js";
+
 const app =express();
-const cors=require('cors');
+
+config({ path: "./config/config.env" });
 
 
-app.use(cors());
+app.use(cors({
+    origin: [process.env.FRONTEND_URL, process.env.DASHBOARD_URL],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
+app.use(cookieParser());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true}));
 
-app.get('/', (req, res)=>{
-  res.send("Hello world")
-});
+app.use(
+  fileUpload({
+    useTempFiles: true,
+    tempFileDir: "./uploads",
+  })
+);
 
-module.exports= app;
+createTables();
+
+app.use(errorMiddleware)
+
+export default app;
